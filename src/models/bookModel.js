@@ -1,4 +1,12 @@
-const { collection, getDocs, addDoc } = require("firebase/firestore");
+const {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+} = require("firebase/firestore");
 const {
   getStorage,
   ref,
@@ -25,12 +33,18 @@ const addBook = async (book, imageFile, bookFile) => {
   try {
     let imageUrl = null;
     if (imageFile) {
-      imageUrl = await uploadFileStorage(imageFile, `bookPicture/${imageFile.originalname}`);
+      imageUrl = await uploadFileStorage(
+        imageFile,
+        `bookPicture/${imageFile.originalname}`
+      );
     }
 
     let bookUrl = null;
     if (bookFile) {
-      bookUrl = await uploadFileStorage(bookFile, `bookFile/${bookFile.originalname}`);
+      bookUrl = await uploadFileStorage(
+        bookFile,
+        `bookFile/${bookFile.originalname}`
+      );
     }
 
     const bookData = {
@@ -49,4 +63,48 @@ const addBook = async (book, imageFile, bookFile) => {
   }
 };
 
-module.exports = { getAllBooks, addBook };
+const updateBook = async (bookId, updatedBookData, imageFile, bookFile) => {
+  try {
+    const bookRef = doc(db, "books", bookId);
+
+    if (imageFile) {
+      const imageUrl = await uploadFileStorage(
+        imageFile,
+        `bookPicture/${imageFile.originalname}`
+      );
+      updatedBookData.imageUrl = imageUrl;
+    }
+
+    if (bookFile) {
+      const bookUrl = await uploadFileStorage(
+        bookFile,
+        `bookFile/${bookFile.originalname}`
+      );
+      updatedBookData.bookFile = bookUrl;
+    }
+
+    // Atualiza os dados do livro no Firestore
+    await updateDoc(bookRef, updatedBookData);
+    return { id: bookId, ...updatedBookData };
+  } catch (error) {
+    throw new Error("Erro ao atualizar o livro: " + error.message);
+  }
+};
+
+const deleteBook = async (bookId) => {
+  try {
+    const bookRef = doc(db, "books", bookId);
+    await deleteDoc(bookRef);
+    return { message: "Livro deletado com Sucesso!" };
+  } catch (error) {
+    throw new Error("Erro ao deletar o livro: " + error.message);
+  }
+};
+
+module.exports = {
+  getAllBooks,
+  addBook,
+  updateBook,
+  deleteBook,
+  uploadFileStorage,
+};
