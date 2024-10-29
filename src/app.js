@@ -7,10 +7,8 @@ const userRoutes = require("./routes/userRoutes");
 const multer = require("multer");
 
 const app = express();
-const upload = multer();
 
 app.use(express.json());
-app.use(upload.fields([{name: 'profilePicture', maxCount: 1}])) //Lida com upload de foto de perfil
 
 
 app.use("/api/books", bookRoutes); 
