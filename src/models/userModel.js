@@ -1,5 +1,21 @@
-const { collection, addDoc, doc, setDoc, getDoc, updateDoc } = require("firebase/firestore");
-const { ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+
+const axios = require("axios");
+const {
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+} = require("firebase/firestore");
+const {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} = require("firebase/storage");
+
 const { auth, db, storage } = require("../firebase");
 const {
   createUserWithEmailAndPassword,
@@ -15,8 +31,10 @@ const uploadFileStorage = async (file, path) => {
 };
 
 const updateProfilePicture = async (userId, profileImage) => {
-  if(!profileImage) throw new Error("Nenhuma imagem enviada!");
-  if(!userId) throw new Error("User ID está indefinido.!");
+
+  if (!profileImage) throw new Error("Nenhuma imagem enviada!");
+  if (!userId) throw new Error("User ID está indefinido.!");
+
 
   console.log("User ID recebido:", userId);
 
@@ -30,10 +48,12 @@ const updateProfilePicture = async (userId, profileImage) => {
 
   //atualiza o firestore com o novo link da imagem
   const userDocRef = doc(db, "users", userId);
-  await updateDoc(userDocRef, {profilePictureUrl: profileImageUrl});
+
+  await updateDoc(userDocRef, { profilePictureUrl: profileImageUrl });
 
   return profileImageUrl;
-}
+};
+
 
 const createUser = async (userData, profilePicture) => {
   try {
@@ -70,8 +90,15 @@ const createUser = async (userData, profilePicture) => {
 
 const loginUser = async (email, password) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     const user = userCredential.user;
+    const token = await user.getIdToken();
+
 
     if (user) {
       const userRef = doc(collection(db, "users"), user.uid);
@@ -84,6 +111,7 @@ const loginUser = async (email, password) => {
           email: user.email,
           name: userData.name || null,
           profilePicture: userData.profilePictureUrl || null,
+          token: token,
         };
       } else {
         throw new Error("User data not found in Firestore");
@@ -101,4 +129,68 @@ const logoutUser = async () => {
   await signOut(auth);
 };
 
-module.exports = { updateProfilePicture, createUser, loginUser, logoutUser };
+
+const updateUser = async (userId, userData) => {
+  if (!userId) throw new Error("User Id está indefinido!");
+
+  const userDocRef = doc(db, "users", userId);
+
+  await updateDoc(userDocRef, userData);
+
+  return "Dados do usuário atualizados com sucesso!";
+};
+
+// const deleteUser = async (userId) => {
+//   try {
+//     const userDocRef = doc(collection(db, "users"), userId);
+//     const userDoc = await getDoc(userDocRef);
+//     if (!userDoc.exists()) {
+//       throw new Error("Usuário não encontrado!");
+//     }
+
+//     const profilePictureUrl = userDoc.data().profilePictureUrl;
+//     if (profilePictureUrl) {
+//       const decodeUrl = decodeURIComponent(profilePictureUrl);
+//       const filePath = decodeUrl.split("/o/")[1].split("?")[0];
+//       const storageRef = ref(storage, filePath);
+//       try {
+//         await deleteObject(storageRef);
+//       } catch (error) {
+//         console.log("Erro ao excluir foto do perfil: ", error);
+//       }
+//     }
+
+//     await deleteDoc(userDocRef);
+
+//     const response = await fetch(
+//       `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${process.env.FIREBASE_API_KEY}`,
+//       {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           idToken: idToken,
+//         }),
+//       }
+//     );
+
+//     if (!response.ok) {
+//       throw new Error("Erro ao deletar o usuário: " + response.statusText);
+//     }
+
+//     return response.json();
+//   } catch (error) {
+//     throw new Error(`Erro ao excluir o usuário: ${error.message}`);
+//   }
+// };
+
+module.exports = {
+  updateProfilePicture,
+  createUser,
+  loginUser,
+  logoutUser,
+  updateUser,
+ // deleteUser,
+};
+
