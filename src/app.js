@@ -1,10 +1,8 @@
 require("dotenv").config();
 
 const express = require("express");
-const { db } = require("./firebase"); 
 const bookRoutes = require("./routes/bookRoutes");
 const userRoutes = require("./routes/userRoutes");
-const multer = require("multer");
 
 const app = express();
 
