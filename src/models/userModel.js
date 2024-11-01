@@ -1,3 +1,4 @@
+
 const axios = require("axios");
 const {
   collection,
@@ -14,6 +15,7 @@ const {
   getDownloadURL,
   deleteObject,
 } = require("firebase/storage");
+
 const { auth, db, storage } = require("../firebase");
 const {
   createUserWithEmailAndPassword,
@@ -29,8 +31,10 @@ const uploadFileStorage = async (file, path) => {
 };
 
 const updateProfilePicture = async (userId, profileImage) => {
+
   if (!profileImage) throw new Error("Nenhuma imagem enviada!");
   if (!userId) throw new Error("User ID está indefinido.!");
+
 
   console.log("User ID recebido:", userId);
 
@@ -44,10 +48,12 @@ const updateProfilePicture = async (userId, profileImage) => {
 
   //atualiza o firestore com o novo link da imagem
   const userDocRef = doc(db, "users", userId);
+
   await updateDoc(userDocRef, { profilePictureUrl: profileImageUrl });
 
   return profileImageUrl;
 };
+
 
 const createUser = async (userData, profilePicture) => {
   try {
@@ -84,6 +90,7 @@ const createUser = async (userData, profilePicture) => {
 
 const loginUser = async (email, password) => {
   try {
+
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
@@ -91,6 +98,7 @@ const loginUser = async (email, password) => {
     );
     const user = userCredential.user;
     const token = await user.getIdToken();
+
 
     if (user) {
       const userRef = doc(collection(db, "users"), user.uid);
@@ -120,6 +128,7 @@ const loginUser = async (email, password) => {
 const logoutUser = async () => {
   await signOut(auth);
 };
+
 
 const updateUser = async (userId, userData) => {
   if (!userId) throw new Error("User Id está indefinido!");
@@ -184,3 +193,4 @@ module.exports = {
   updateUser,
  // deleteUser,
 };
+

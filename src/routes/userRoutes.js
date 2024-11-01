@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+
 const {
   registerUser,
   login,
@@ -9,9 +10,11 @@ const {
   //deleteUserController,
 } = require("../controllers/userController");
 
+
 const router = express.Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
+
 
 router.post(
   "/registerUser",
@@ -32,5 +35,6 @@ router.put(
 router.put("/:userId", upload.single("profileImage"), editUserController);
 
 // router.delete("/:id", deleteUserController);
+
 
 module.exports = router;

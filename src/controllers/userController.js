@@ -33,9 +33,11 @@ const login = async (req, res) => {
 
   try {
     const userData = await loginUser(email, password);
+
     res
       .status(200)
       .json({ message: "User logged in successfully!  ", userData });
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -54,10 +56,12 @@ const updateProfilePictureController = async (req, res) => {
   try {
     console.log("req.params:", req.params);
     const userId = req.params.userId;
+
     const profileImage = req.file;
 
     console.log("User ID:", userId); // Agora deve mostrar o ID correto
     console.log("Profile Image:", profileImage); // Verifica o recebimento correto do arquivo
+
 
     if (!userId) {
       return res.status(400).json({ error: "User ID está indefinido." });
@@ -67,14 +71,17 @@ const updateProfilePictureController = async (req, res) => {
     }
 
     const profileImageUrl = await updateProfilePicture(userId, profileImage);
+
     res
       .status(200)
       .json({ message: "Foto de perfil atualizada!", profileImageUrl });
+
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: error.message });
   }
 };
+
 
 const editUserController = async (req, res) => {
   try {
@@ -141,3 +148,4 @@ module.exports = {
   editUserController,
   //deleteUserController,
 };
+
