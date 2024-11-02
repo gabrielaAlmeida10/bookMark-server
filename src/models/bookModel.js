@@ -6,6 +6,8 @@ const {
   addDoc,
   updateDoc,
   deleteDoc,
+  query,
+  where
 } = require("firebase/firestore");
 const {
   getStorage,
@@ -17,10 +19,24 @@ const {
 const { db } = require("../firebase");
 const { storage } = require("../firebase");
 
-const getAllBooks = async () => {
-  const snapshot = await getDocs(collection(db, "books"));
-  return snapshot.docs.map((doc) => doc.data());
+const getUserBooks = async (userId) => {
+  try {
+    console.log("User ID being used in query:", userId); // Confirmando o userId
+    const userBooksQuery = query(
+      collection(db, "books"),
+      where("userId", "==", userId)
+    );
+    const snapshot = await getDocs(userBooksQuery);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching books:", error.message);
+    throw new Error("Erro ao buscar livros do usuário: " + error.message);
+  }
 };
+
 
 const uploadFileStorage = async (file, path) => {
   const storageRef = ref(storage, path);
@@ -102,7 +118,7 @@ const deleteBook = async (bookId) => {
 };
 
 module.exports = {
-  getAllBooks,
+  getUserBooks,
   addBook,
   updateBook,
   deleteBook,

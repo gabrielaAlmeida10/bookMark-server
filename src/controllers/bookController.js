@@ -1,5 +1,5 @@
 const {
-  getAllBooks,
+  getUserBooks,
   addBook,
   updateBook,
   deleteBook,
@@ -7,12 +7,16 @@ const {
 
 const listBooks = async (req, res) => {
   try {
-    const books = await getAllBooks();
+    const userId = req.userId;
+    console.log("User ID from middleware in controller:", userId); // Confirmando o userId no controller
+    const books = await getUserBooks(userId);
     res.status(200).json(books);
   } catch (error) {
+    console.error("Erro ao buscar livros:", error.message);
     res.status(500).json({ message: "Erro ao buscar livros" });
   }
 };
+
 
 const createBook = async (req, res) => {
   const book = req.body;

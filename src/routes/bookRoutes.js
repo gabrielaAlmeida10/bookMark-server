@@ -12,7 +12,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const router = express.Router();
 const upload = multer();
 
-router.get("/books", listBooks);
+router.get("/books", authMiddleware, listBooks);
 
 router.post(
   "/create",
