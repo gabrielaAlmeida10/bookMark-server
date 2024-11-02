@@ -7,14 +7,17 @@ const {
   removeBook,
 } = require("../controllers/bookController");
 
+const authMiddleware = require("../middleware/authMiddleware");
+
 const router = express.Router();
 const upload = multer();
 
 router.get("/books", listBooks);
 
 router.post(
-  "/books",
+  "/create",
   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
+  authMiddleware,
   createBook
 );
 

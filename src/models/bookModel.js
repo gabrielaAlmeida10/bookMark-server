@@ -29,13 +29,13 @@ const uploadFileStorage = async (file, path) => {
   return downloadUrl;
 };
 
-const addBook = async (book, imageFile, bookFile) => {
+const addBook = async (book, imageFile, bookFile, userId) => {
   try {
     let imageUrl = null;
     if (imageFile) {
       imageUrl = await uploadFileStorage(
         imageFile,
-        `bookPicture/${imageFile.originalname}`
+        `bookPicture/${userId}/${imageFile.originalname}`
       );
     }
 
@@ -43,7 +43,7 @@ const addBook = async (book, imageFile, bookFile) => {
     if (bookFile) {
       bookUrl = await uploadFileStorage(
         bookFile,
-        `bookFile/${bookFile.originalname}`
+        `bookFile/${userId}/${bookFile.originalname}`
       );
     }
 

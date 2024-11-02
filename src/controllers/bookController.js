@@ -20,12 +20,15 @@ const createBook = async (req, res) => {
   const bookFile = req.files["bookFile"] ? req.files["bookFile"][0] : null;
 
   try {
-    const newBook = await addBook(book, imageFile, bookFile);
+    const userId = req.userId;  // Obtendo o userId do middleware de autenticação
+    const newBook = await addBook(book, imageFile, bookFile, userId);
     res.status(201).json(newBook);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 const editBook = async (req, res) => {
   const bookId = req.params.id;
