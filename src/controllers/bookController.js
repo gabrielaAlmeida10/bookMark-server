@@ -54,10 +54,10 @@ const editBook = async (req, res) => {
 };
 
 const removeBook = async (req, res) => {
-  const bookId = req.params.id;
-
+  const bookId = req.params.bookId;
+  const userId = req.userId;
   try {
-    const result = await deleteBook(bookId);
+    const result = await deleteBook(bookId, userId);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

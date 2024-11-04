@@ -21,22 +21,13 @@ router.post(
   createBook
 );
 
-// router.put(
-//   "/books/:bookId",
-//   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
-//   authMiddleware,
-//   editBook
-// );
-
 router.put(
-  "/:bookId",  // Aqui, removemos a parte 'books' da rota
+  "/:bookId", // Aqui, removemos a parte 'books' da rota
   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
   authMiddleware,
   editBook
 );
 
-
-
-router.delete("/books/:id", removeBook);
+router.delete("/:bookId", authMiddleware, removeBook);
 
 module.exports = router;

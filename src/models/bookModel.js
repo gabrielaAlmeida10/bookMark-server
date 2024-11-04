@@ -119,9 +119,15 @@ const updateBook = async (
   }
 };
 
-const deleteBook = async (bookId) => {
+const deleteBook = async (bookId, userId) => {
   try {
     const bookRef = doc(db, "books", bookId);
+    const bookSnapshot = await getDoc(bookRef);
+
+    if(!bookSnapshot.exists() || bookSnapshot.data().userId !== userId){
+      throw new Error("Livro não encontrado ou usuário não autorizado."); 
+    }
+
     await deleteDoc(bookRef);
     return { message: "Livro deletado com Sucesso!" };
   } catch (error) {
