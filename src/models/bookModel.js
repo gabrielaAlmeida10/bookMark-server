@@ -6,6 +6,8 @@ const {
   addDoc,
   updateDoc,
   deleteDoc,
+  query,
+  where,
 } = require("firebase/firestore");
 const {
   getStorage,
@@ -17,9 +19,22 @@ const {
 const { db } = require("../firebase");
 const { storage } = require("../firebase");
 
-const getAllBooks = async () => {
-  const snapshot = await getDocs(collection(db, "books"));
-  return snapshot.docs.map((doc) => doc.data());
+const getUserBooks = async (userId) => {
+  try {
+    console.log("User ID being used in query:", userId); // Confirmando o userId
+    const userBooksQuery = query(
+      collection(db, "books"),
+      where("userId", "==", userId)
+    );
+    const snapshot = await getDocs(userBooksQuery);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching books:", error.message);
+    throw new Error("Erro ao buscar livros do usuário: " + error.message);
+  }
 };
 
 const uploadFileStorage = async (file, path) => {
@@ -29,13 +44,13 @@ const uploadFileStorage = async (file, path) => {
   return downloadUrl;
 };
 
-const addBook = async (book, imageFile, bookFile) => {
+const addBook = async (book, imageFile, bookFile, userId) => {
   try {
     let imageUrl = null;
     if (imageFile) {
       imageUrl = await uploadFileStorage(
         imageFile,
-        `bookPicture/${imageFile.originalname}`
+        `bookPicture/${userId}/${imageFile.originalname}`
       );
     }
 
@@ -43,7 +58,7 @@ const addBook = async (book, imageFile, bookFile) => {
     if (bookFile) {
       bookUrl = await uploadFileStorage(
         bookFile,
-        `bookFile/${bookFile.originalname}`
+        `bookFile/${userId}/${bookFile.originalname}`
       );
     }
 
@@ -51,6 +66,7 @@ const addBook = async (book, imageFile, bookFile) => {
       ...book,
       imageUrl,
       bookUrl,
+      userId
     };
 
     const docRef = await addDoc(collection(db, "books"), bookData);
@@ -63,37 +79,55 @@ const addBook = async (book, imageFile, bookFile) => {
   }
 };
 
-const updateBook = async (bookId, updatedBookData, imageFile, bookFile) => {
+const updateBook = async (
+  bookId,
+  updatedBookData,
+  imageFile,
+  bookFile,
+  userId
+) => {
   try {
     const bookRef = doc(db, "books", bookId);
+    const bookSnapshot = await getDoc(bookRef);
+
+    if (!bookSnapshot.exists() || bookSnapshot.data().userId !== userId) {
+      throw new Error("Livro não encontrado ou usuário não autorizado.");
+    }
+
+    const updates = { ...updatedBookData };
 
     if (imageFile) {
       const imageUrl = await uploadFileStorage(
         imageFile,
-        `bookPicture/${imageFile.originalname}`
+        `bookPicture/${userId}/${imageFile.originalname}`
       );
-      updatedBookData.imageUrl = imageUrl;
+      updates.imageUrl = imageUrl;
     }
 
     if (bookFile) {
       const bookUrl = await uploadFileStorage(
         bookFile,
-        `bookFile/${bookFile.originalname}`
+        `bookFile/${userId}/${bookFile.originalname}`
       );
-      updatedBookData.bookFile = bookUrl;
+      updates.bookUrl = bookUrl;
     }
 
-    // Atualiza os dados do livro no Firestore
-    await updateDoc(bookRef, updatedBookData);
-    return { id: bookId, ...updatedBookData };
+    await updateDoc(bookRef, updates);
+    return { id: bookId, ...updates };
   } catch (error) {
     throw new Error("Erro ao atualizar o livro: " + error.message);
   }
 };
 
-const deleteBook = async (bookId) => {
+const deleteBook = async (bookId, userId) => {
   try {
     const bookRef = doc(db, "books", bookId);
+    const bookSnapshot = await getDoc(bookRef);
+
+    if(!bookSnapshot.exists() || bookSnapshot.data().userId !== userId){
+      throw new Error("Livro não encontrado ou usuário não autorizado."); 
+    }
+
     await deleteDoc(bookRef);
     return { message: "Livro deletado com Sucesso!" };
   } catch (error) {
@@ -102,7 +136,7 @@ const deleteBook = async (bookId) => {
 };
 
 module.exports = {
-  getAllBooks,
+  getUserBooks,
   addBook,
   updateBook,
   deleteBook,

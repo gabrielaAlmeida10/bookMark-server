@@ -7,23 +7,27 @@ const {
   removeBook,
 } = require("../controllers/bookController");
 
+const authMiddleware = require("../middleware/authMiddleware");
+
 const router = express.Router();
 const upload = multer();
 
-router.get("/books", listBooks);
+router.get("/books", authMiddleware, listBooks);
 
 router.post(
-  "/books",
+  "/create",
   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
+  authMiddleware,
   createBook
 );
 
 router.put(
-  "/books/:id",
+  "/:bookId", // Aqui, removemos a parte 'books' da rota
   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
+  authMiddleware,
   editBook
 );
 
-router.delete("/books/:id", removeBook);
+router.delete("/:bookId", authMiddleware, removeBook);
 
 module.exports = router;
