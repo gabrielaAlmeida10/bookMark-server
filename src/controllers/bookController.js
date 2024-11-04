@@ -35,17 +35,18 @@ const createBook = async (req, res) => {
 
 
 const editBook = async (req, res) => {
-  const bookId = req.params.id;
-  const updatebBookData = req.body;
+  const bookId = req.params.bookId;
+  const userId = req.userId;
+  const updatedBookData = req.body;
 
   const imageFile = req.files["imageFile"] ? req.files["imageFile"][0] : null;
   const bookFile = req.files["bookFile"] ? req.files["bookFile"][0] : null;
 
   console.log("ID do livro:", bookId);
-  console.log("Dados para atualização:", updatebBookData);
+  console.log("Dados para atualização:", updatedBookData);
 
   try {
-    const update = await updateBook(bookId, updatebBookData, imageFile, bookFile);
+    const update = await updateBook(bookId, updatedBookData, imageFile, bookFile, userId);
     res.status(200).json(update);
   } catch (error) {
     res.status(500).json({ error: error.message });

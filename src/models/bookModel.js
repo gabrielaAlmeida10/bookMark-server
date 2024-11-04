@@ -7,7 +7,7 @@ const {
   updateDoc,
   deleteDoc,
   query,
-  where
+  where,
 } = require("firebase/firestore");
 const {
   getStorage,
@@ -36,7 +36,6 @@ const getUserBooks = async (userId) => {
     throw new Error("Erro ao buscar livros do usuário: " + error.message);
   }
 };
-
 
 const uploadFileStorage = async (file, path) => {
   const storageRef = ref(storage, path);
@@ -67,6 +66,7 @@ const addBook = async (book, imageFile, bookFile, userId) => {
       ...book,
       imageUrl,
       bookUrl,
+      userId
     };
 
     const docRef = await addDoc(collection(db, "books"), bookData);
@@ -79,29 +79,41 @@ const addBook = async (book, imageFile, bookFile, userId) => {
   }
 };
 
-const updateBook = async (bookId, updatedBookData, imageFile, bookFile) => {
+const updateBook = async (
+  bookId,
+  updatedBookData,
+  imageFile,
+  bookFile,
+  userId
+) => {
   try {
     const bookRef = doc(db, "books", bookId);
+    const bookSnapshot = await getDoc(bookRef);
+
+    if (!bookSnapshot.exists() || bookSnapshot.data().userId !== userId) {
+      throw new Error("Livro não encontrado ou usuário não autorizado.");
+    }
+
+    const updates = { ...updatedBookData };
 
     if (imageFile) {
       const imageUrl = await uploadFileStorage(
         imageFile,
-        `bookPicture/${imageFile.originalname}`
+        `bookPicture/${userId}/${imageFile.originalname}`
       );
-      updatedBookData.imageUrl = imageUrl;
+      updates.imageUrl = imageUrl;
     }
 
     if (bookFile) {
       const bookUrl = await uploadFileStorage(
         bookFile,
-        `bookFile/${bookFile.originalname}`
+        `bookFile/${userId}/${bookFile.originalname}`
       );
-      updatedBookData.bookFile = bookUrl;
+      updates.bookUrl = bookUrl;
     }
 
-    // Atualiza os dados do livro no Firestore
-    await updateDoc(bookRef, updatedBookData);
-    return { id: bookId, ...updatedBookData };
+    await updateDoc(bookRef, updates);
+    return { id: bookId, ...updates };
   } catch (error) {
     throw new Error("Erro ao atualizar o livro: " + error.message);
   }

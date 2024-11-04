@@ -21,11 +21,21 @@ router.post(
   createBook
 );
 
+// router.put(
+//   "/books/:bookId",
+//   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
+//   authMiddleware,
+//   editBook
+// );
+
 router.put(
-  "/books/:id",
+  "/:bookId",  // Aqui, removemos a parte 'books' da rota
   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
+  authMiddleware,
   editBook
 );
+
+
 
 router.delete("/books/:id", removeBook);
 
