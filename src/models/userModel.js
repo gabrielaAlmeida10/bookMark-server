@@ -36,18 +36,12 @@ const updateProfilePicture = async (userId, profileImage) => {
   if (!profileImage) throw new Error("Nenhuma imagem enviada!");
   if (!userId) throw new Error("User ID está indefinido.!");
 
-
-  console.log("User ID recebido:", userId);
-
-  //fazer upload para o firebase storage:
   const imagePath = `gs://bookmark-server-2e779.appspot.com/perfil/${userId}/${profileImage.originalname}`;
   const storageRef = ref(storage, imagePath);
   await uploadBytes(storageRef, profileImage.buffer);
 
-  //obtém url pública da imagem
   const profileImageUrl = await getDownloadURL(storageRef);
 
-  //atualiza o firestore com o novo link da imagem
   const userDocRef = doc(db, "users", userId);
 
   await updateDoc(userDocRef, { profilePictureUrl: profileImageUrl });
@@ -143,37 +137,30 @@ const updateUser = async (userId, userData) => {
 
 const deleteUserData = async (userId) => {
   try {
-    // Deleta livros e avaliações do Firestore
     const booksQuery = query(collection(db, "books"), where("userId", "==", userId));
     const booksSnapshot = await getDocs(booksQuery);
 
     for (const bookDoc of booksSnapshot.docs) {
       const bookData = bookDoc.data();
-      console.log(`Excluindo arquivos para o livro ${bookDoc.id}`);
 
-      // Exclui a imagem do livro, se existir
       if (bookData.imageUrl) {
         const imageRef = ref(storage, `books/${userId}/${bookData.imageUrl}`); // Inclui o userId no caminho
         try {
           await deleteObject(imageRef);
-          console.log(`Imagem excluída: ${bookData.imageUrl}`);
         } catch (err) {
           console.error(`Erro ao excluir imagem: ${bookData.imageUrl}`, err);
         }
       }
 
-      // Exclui o arquivo do livro, se existir
       if (bookData.bookUrl) {
         const bookFileRef = ref(storage, `books/${userId}/${bookData.bookUrl}`); // Inclui o userId no caminho
         try {
           await deleteObject(bookFileRef);
-          console.log(`Arquivo de livro excluído: ${bookData.bookUrl}`);
         } catch (err) {
           console.error(`Erro ao excluir arquivo de livro: ${bookData.bookUrl}`, err);
         }
       }
 
-      // Deleta avaliações associadas ao livro
       const evaluationsQuery = query(
         collection(db, "evaluations"),
         where("bookId", "==", bookDoc.id)
@@ -183,25 +170,21 @@ const deleteUserData = async (userId) => {
         await deleteDoc(evalDoc.ref);
       }
 
-      // Deleta o documento do livro
       await deleteDoc(bookDoc.ref);
     }
 
-    // Deleta metas associadas ao usuário (se houver)
     const goalsQuery = query(collection(db, "goals"), where("userId", "==", userId));
     const goalsSnapshot = await getDocs(goalsQuery);
     for (const goalDoc of goalsSnapshot.docs) {
       await deleteDoc(goalDoc.ref);
     }
 
-    // Exclui avaliações do usuário
     const evaluationsQuery = query(collection(db, "evaluations"), where("userId", "==", userId));
     const evaluationsSnapshot = await getDocs(evaluationsQuery);
     for (const evalDoc of evaluationsSnapshot.docs) {
       await deleteDoc(evalDoc.ref);
     }
 
-    // Deleta o usuário do Firestore (se houver)
     const userDocRef = doc(db, "users", userId);
     await deleteDoc(userDocRef);
 

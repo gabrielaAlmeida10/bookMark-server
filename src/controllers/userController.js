@@ -54,14 +54,9 @@ const logout = async (req, res) => {
 
 const updateProfilePictureController = async (req, res) => {
   try {
-    console.log("req.params:", req.params);
     const userId = req.params.userId;
 
     const profileImage = req.file;
-
-    console.log("User ID:", userId); // Agora deve mostrar o ID correto
-    console.log("Profile Image:", profileImage); // Verifica o recebimento correto do arquivo
-
 
     if (!userId) {
       return res.status(400).json({ error: "User ID está indefinido." });
@@ -88,8 +83,6 @@ const editUserController = async (req, res) => {
     const userId = req.params.userId;
     const { name, email } = req.body;
     const profileImage = req.file;
-
-    console.log("User ID:", userId);
 
     const userData = {};
 
@@ -123,11 +116,9 @@ const deleteUserAccount = async (req, res) => {
   const userId = req.userId;
 
   try {
-    // Exclui dados do Firestore e arquivos do Storage
     await deleteUserData(userId);
 
-    // Faz a exclusão do usuário via Identity Toolkit API
-    const idToken = req.headers.authorization.split(" ")[1]; // Pegando o token do header
+    const idToken = req.headers.authorization.split(" ")[1]; 
     const apiKey = process.env.FIREBASE_API_KEY;
 
     const response = await fetch(

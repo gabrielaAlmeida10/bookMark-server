@@ -7,7 +7,7 @@ const {
 const createGoalController = async (req, res) => {
   try {
     const { name, totalBooks, startDate } = req.body;
-    const userId = req.userId; // Certifique-se de que o middleware de autenticação esteja configurando `req.userId`
+    const userId = req.userId; 
 
     if (!name || !totalBooks || !startDate) {
       return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });

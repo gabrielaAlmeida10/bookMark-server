@@ -8,7 +8,6 @@ const {
 const listBooks = async (req, res) => {
   try {
     const userId = req.userId;
-    console.log("User ID from middleware in controller:", userId); // Confirmando o userId no controller
     const books = await getUserBooks(userId);
     res.status(200).json(books);
   } catch (error) {
@@ -24,7 +23,7 @@ const createBook = async (req, res) => {
   const bookFile = req.files["bookFile"] ? req.files["bookFile"][0] : null;
 
   try {
-    const userId = req.userId;  // Obtendo o userId do middleware de autenticação
+    const userId = req.userId;  
     const newBook = await addBook(book, imageFile, bookFile, userId);
     res.status(201).json(newBook);
   } catch (error) {
@@ -41,10 +40,7 @@ const editBook = async (req, res) => {
 
   const imageFile = req.files["imageFile"] ? req.files["imageFile"][0] : null;
   const bookFile = req.files["bookFile"] ? req.files["bookFile"][0] : null;
-
-  console.log("ID do livro:", bookId);
-  console.log("Dados para atualização:", updatedBookData);
-
+  
   try {
     const update = await updateBook(bookId, updatedBookData, imageFile, bookFile, userId);
     res.status(200).json(update);

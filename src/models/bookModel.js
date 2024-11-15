@@ -21,7 +21,6 @@ const { storage } = require("../firebase");
 
 const getUserBooks = async (userId) => {
   try {
-    console.log("User ID being used in query:", userId); // Confirmando o userId
     const userBooksQuery = query(
       collection(db, "books"),
       where("userId", "==", userId)
@@ -124,15 +123,12 @@ const deleteBook = async (bookId, userId) => {
     const bookRef = doc(db, "books", bookId);
     const bookSnapshot = await getDoc(bookRef);
 
-    // Verificar se o livro existe e pertence ao usuário
     if (!bookSnapshot.exists() || bookSnapshot.data().userId !== userId) {
       throw new Error("Livro não encontrado ou usuário não autorizado.");
     }
 
-    // Criar um batch para operações de escrita em lote
     const batch = writeBatch(db);
 
-    // Busca por avaliações associadas ao livro
     const evaluationsQuery = query(
       collection(db, "evaluations"),
       where("bookId", "==", bookId),
@@ -140,15 +136,12 @@ const deleteBook = async (bookId, userId) => {
     );
     const evaluationsSnapshot = await getDocs(evaluationsQuery);
 
-    // Adicionar a remoção das avaliações ao batch
     evaluationsSnapshot.forEach((evaluationDoc) => {
       batch.delete(evaluationDoc.ref);
     });
 
-    // Adicionar a remoção do livro ao batch
     batch.delete(bookRef);
 
-    // Executar o batch
     await batch.commit();
 
     return { message: "Livro e avaliação (se houver) deletados com sucesso!" };

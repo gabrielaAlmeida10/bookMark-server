@@ -1,7 +1,7 @@
 const { createEvaluation,updateEvaluation } = require("../models/evaluationModel");
 
 const addEvalutationController = async (req, res) => {
-  const { bookId, rating, comments = "" } = req.body; // define valor padrão
+  const { bookId, rating, comments = "" } = req.body; 
   const userId = req.userId;
 
   try {
@@ -16,7 +16,7 @@ const addEvalutationController = async (req, res) => {
 const updateEvaluationController = async (req, res) => {
   try {
     const { evaluationId } = req.params;
-    const userId = req.userId; // Supondo que o middleware de autenticação injeta o `user` no request
+    const userId = req.userId; 
     const { rating, comments } = req.body;
 
     if (!evaluationId) {

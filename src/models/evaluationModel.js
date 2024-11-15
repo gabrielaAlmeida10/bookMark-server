@@ -8,7 +8,7 @@ const {
 } = require("firebase/firestore");
 const { db } = require("../firebase");
 
-const createEvaluation = async ({ userId, bookId, rating, comments = "" }) => { // valor padrão para comments
+const createEvaluation = async ({ userId, bookId, rating, comments = "" }) => { 
   try {
     const evaluationData = {
       userId,
