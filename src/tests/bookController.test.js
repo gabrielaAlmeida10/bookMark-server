@@ -1,9 +1,7 @@
-// __tests__/bookController.test.js
 const { listBooks, editBook } = require("../controllers/bookController");
 const { getUserBooks, updateBook } = require("../models/bookModel");
 const { getAuth } = require("firebase/auth");
 
-// Mockar dependências
 jest.mock("../models/bookModel");
 jest.mock("firebase/auth");
 
@@ -35,7 +33,6 @@ describe("Book Controller Tests", () => {
   });
 
   test("Should list books for a user", async () => {
-    // Mockar resposta do getUserBooks
     getUserBooks.mockResolvedValue([{ id: "1", title: "Mocked Book", userId: mockUserId }]);
 
     await listBooks(req, res);
@@ -45,7 +42,6 @@ describe("Book Controller Tests", () => {
   });
 
   test("Should update book details for a user", async () => {
-    // Mockar resposta do updateBook
     updateBook.mockResolvedValue({
       id: req.params.bookId,
       title: req.body.title,

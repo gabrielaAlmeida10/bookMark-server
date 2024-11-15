@@ -5,9 +5,9 @@ const {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
+  writeBatch,
 } = require("firebase/firestore");
 const {
   getStorage,
@@ -124,16 +124,40 @@ const deleteBook = async (bookId, userId) => {
     const bookRef = doc(db, "books", bookId);
     const bookSnapshot = await getDoc(bookRef);
 
-    if(!bookSnapshot.exists() || bookSnapshot.data().userId !== userId){
-      throw new Error("Livro não encontrado ou usuário não autorizado."); 
+    // Verificar se o livro existe e pertence ao usuário
+    if (!bookSnapshot.exists() || bookSnapshot.data().userId !== userId) {
+      throw new Error("Livro não encontrado ou usuário não autorizado.");
     }
 
-    await deleteDoc(bookRef);
-    return { message: "Livro deletado com Sucesso!" };
+    // Criar um batch para operações de escrita em lote
+    const batch = writeBatch(db);
+
+    // Busca por avaliações associadas ao livro
+    const evaluationsQuery = query(
+      collection(db, "evaluations"),
+      where("bookId", "==", bookId),
+      where("userId", "==", userId)
+    );
+    const evaluationsSnapshot = await getDocs(evaluationsQuery);
+
+    // Adicionar a remoção das avaliações ao batch
+    evaluationsSnapshot.forEach((evaluationDoc) => {
+      batch.delete(evaluationDoc.ref);
+    });
+
+    // Adicionar a remoção do livro ao batch
+    batch.delete(bookRef);
+
+    // Executar o batch
+    await batch.commit();
+
+    return { message: "Livro e avaliação (se houver) deletados com sucesso!" };
   } catch (error) {
     throw new Error("Erro ao deletar o livro: " + error.message);
   }
 };
+
+
 
 module.exports = {
   getUserBooks,
