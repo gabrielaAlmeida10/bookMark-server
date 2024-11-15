@@ -1,13 +1,14 @@
-
-const axios = require("axios");
 const {
   collection,
   addDoc,
   doc,
   setDoc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
+  query,
+  where,
 } = require("firebase/firestore");
 const {
   ref,
@@ -140,50 +141,74 @@ const updateUser = async (userId, userData) => {
   return "Dados do usuário atualizados com sucesso!";
 };
 
-// const deleteUser = async (userId) => {
-//   try {
-//     const userDocRef = doc(collection(db, "users"), userId);
-//     const userDoc = await getDoc(userDocRef);
-//     if (!userDoc.exists()) {
-//       throw new Error("Usuário não encontrado!");
-//     }
+const deleteUserData = async (userId) => {
+  try {
+    // Deleta livros e avaliações do Firestore
+    const booksQuery = query(collection(db, "books"), where("userId", "==", userId));
+    const booksSnapshot = await getDocs(booksQuery);
 
-//     const profilePictureUrl = userDoc.data().profilePictureUrl;
-//     if (profilePictureUrl) {
-//       const decodeUrl = decodeURIComponent(profilePictureUrl);
-//       const filePath = decodeUrl.split("/o/")[1].split("?")[0];
-//       const storageRef = ref(storage, filePath);
-//       try {
-//         await deleteObject(storageRef);
-//       } catch (error) {
-//         console.log("Erro ao excluir foto do perfil: ", error);
-//       }
-//     }
+    for (const bookDoc of booksSnapshot.docs) {
+      const bookData = bookDoc.data();
+      console.log(`Excluindo arquivos para o livro ${bookDoc.id}`);
 
-//     await deleteDoc(userDocRef);
+      // Exclui a imagem do livro, se existir
+      if (bookData.imageUrl) {
+        const imageRef = ref(storage, `books/${userId}/${bookData.imageUrl}`); // Inclui o userId no caminho
+        try {
+          await deleteObject(imageRef);
+          console.log(`Imagem excluída: ${bookData.imageUrl}`);
+        } catch (err) {
+          console.error(`Erro ao excluir imagem: ${bookData.imageUrl}`, err);
+        }
+      }
 
-//     const response = await fetch(
-//       `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${process.env.FIREBASE_API_KEY}`,
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           idToken: idToken,
-//         }),
-//       }
-//     );
+      // Exclui o arquivo do livro, se existir
+      if (bookData.bookUrl) {
+        const bookFileRef = ref(storage, `books/${userId}/${bookData.bookUrl}`); // Inclui o userId no caminho
+        try {
+          await deleteObject(bookFileRef);
+          console.log(`Arquivo de livro excluído: ${bookData.bookUrl}`);
+        } catch (err) {
+          console.error(`Erro ao excluir arquivo de livro: ${bookData.bookUrl}`, err);
+        }
+      }
 
-//     if (!response.ok) {
-//       throw new Error("Erro ao deletar o usuário: " + response.statusText);
-//     }
+      // Deleta avaliações associadas ao livro
+      const evaluationsQuery = query(
+        collection(db, "evaluations"),
+        where("bookId", "==", bookDoc.id)
+      );
+      const evaluationsSnapshot = await getDocs(evaluationsQuery);
+      for (const evalDoc of evaluationsSnapshot.docs) {
+        await deleteDoc(evalDoc.ref);
+      }
 
-//     return response.json();
-//   } catch (error) {
-//     throw new Error(`Erro ao excluir o usuário: ${error.message}`);
-//   }
-// };
+      // Deleta o documento do livro
+      await deleteDoc(bookDoc.ref);
+    }
+
+    // Deleta metas associadas ao usuário (se houver)
+    const goalsQuery = query(collection(db, "goals"), where("userId", "==", userId));
+    const goalsSnapshot = await getDocs(goalsQuery);
+    for (const goalDoc of goalsSnapshot.docs) {
+      await deleteDoc(goalDoc.ref);
+    }
+
+    // Exclui avaliações do usuário
+    const evaluationsQuery = query(collection(db, "evaluations"), where("userId", "==", userId));
+    const evaluationsSnapshot = await getDocs(evaluationsQuery);
+    for (const evalDoc of evaluationsSnapshot.docs) {
+      await deleteDoc(evalDoc.ref);
+    }
+
+    // Deleta o usuário do Firestore (se houver)
+    const userDocRef = doc(db, "users", userId);
+    await deleteDoc(userDocRef);
+
+  } catch (error) {
+    throw new Error("Erro ao deletar dados do usuário: " + error.message);
+  }
+};
 
 module.exports = {
   updateProfilePicture,
@@ -191,6 +216,6 @@ module.exports = {
   loginUser,
   logoutUser,
   updateUser,
- // deleteUser,
+  deleteUserData
 };
 

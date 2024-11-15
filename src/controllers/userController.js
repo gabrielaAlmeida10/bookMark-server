@@ -6,7 +6,7 @@ const {
   logoutUser,
   updateProfilePicture,
   updateUser,
- // deleteUser,
+ deleteUserData
 } = require("../models/userModel");
 
 const registerUser = async (req, res) => {
@@ -119,26 +119,38 @@ const editUserController = async (req, res) => {
 };
 
 
-// const deleteUserController = async (req, res) => {
-//   try {
-//     console.log('Cabeçalhos recebidos:', req.headers); // Verifique os cabeçalhos recebidos
+const deleteUserAccount = async (req, res) => {
+  const userId = req.userId;
 
-//       const authHeader = req.headers.authorization; // obtém o cabeçalho de autorização
+  try {
+    // Exclui dados do Firestore e arquivos do Storage
+    await deleteUserData(userId);
 
-//       if (!authHeader) {
-//           return res.status(401).json({ error: 'Token de autenticação não fornecido' });
-//       }
+    // Faz a exclusão do usuário via Identity Toolkit API
+    const idToken = req.headers.authorization.split(" ")[1]; // Pegando o token do header
+    const apiKey = process.env.FIREBASE_API_KEY;
 
-//       const idToken = authHeader.split(' ')[1]; // obtém o token após "Bearer"
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+      }
+    );
 
-//       // Chame a função para deletar o usuário
-//       await deleteUser(idToken);
-//       res.status(200).json({ message: 'Usuário deletado com sucesso' });
-//   } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ error: error.message });
-//   }
-// };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Erro ao deletar usuário no Authentication: ${errorData.error.message}`);
+    }
+
+    res.status(200).json({ message: "Conta e dados excluídos com sucesso!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   registerUser,
@@ -146,6 +158,6 @@ module.exports = {
   logout,
   updateProfilePictureController,
   editUserController,
-  //deleteUserController,
+  deleteUserAccount,
 };
 
