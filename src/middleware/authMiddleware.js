@@ -31,4 +31,4 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware; // Certifique-se de que está exportando corretamente
+module.exports = authMiddleware; 

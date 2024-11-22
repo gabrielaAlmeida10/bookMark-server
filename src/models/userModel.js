@@ -144,7 +144,7 @@ const deleteUserData = async (userId) => {
       const bookData = bookDoc.data();
 
       if (bookData.imageUrl) {
-        const imageRef = ref(storage, `books/${userId}/${bookData.imageUrl}`); // Inclui o userId no caminho
+        const imageRef = ref(storage, `books/${userId}/${bookData.imageUrl}`); 
         try {
           await deleteObject(imageRef);
         } catch (err) {
@@ -153,7 +153,7 @@ const deleteUserData = async (userId) => {
       }
 
       if (bookData.bookUrl) {
-        const bookFileRef = ref(storage, `books/${userId}/${bookData.bookUrl}`); // Inclui o userId no caminho
+        const bookFileRef = ref(storage, `books/${userId}/${bookData.bookUrl}`); 
         try {
           await deleteObject(bookFileRef);
         } catch (err) {

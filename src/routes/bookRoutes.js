@@ -22,7 +22,7 @@ router.post(
 );
 
 router.put(
-  "/:bookId", // Aqui, removemos a parte 'books' da rota
+  "/:bookId",
   upload.fields([{ name: "imageFile" }, { name: "bookFile" }]),
   authMiddleware,
   editBook
