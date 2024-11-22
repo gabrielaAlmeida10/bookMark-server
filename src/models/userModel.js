@@ -1,13 +1,14 @@
-
-const axios = require("axios");
 const {
   collection,
   addDoc,
   doc,
   setDoc,
   getDoc,
+  getDocs,
   updateDoc,
   deleteDoc,
+  query,
+  where,
 } = require("firebase/firestore");
 const {
   ref,
@@ -35,18 +36,12 @@ const updateProfilePicture = async (userId, profileImage) => {
   if (!profileImage) throw new Error("Nenhuma imagem enviada!");
   if (!userId) throw new Error("User ID está indefinido.!");
 
-
-  console.log("User ID recebido:", userId);
-
-  //fazer upload para o firebase storage:
   const imagePath = `gs://bookmark-server-2e779.appspot.com/perfil/${userId}/${profileImage.originalname}`;
   const storageRef = ref(storage, imagePath);
   await uploadBytes(storageRef, profileImage.buffer);
 
-  //obtém url pública da imagem
   const profileImageUrl = await getDownloadURL(storageRef);
 
-  //atualiza o firestore com o novo link da imagem
   const userDocRef = doc(db, "users", userId);
 
   await updateDoc(userDocRef, { profilePictureUrl: profileImageUrl });
@@ -140,50 +135,63 @@ const updateUser = async (userId, userData) => {
   return "Dados do usuário atualizados com sucesso!";
 };
 
-// const deleteUser = async (userId) => {
-//   try {
-//     const userDocRef = doc(collection(db, "users"), userId);
-//     const userDoc = await getDoc(userDocRef);
-//     if (!userDoc.exists()) {
-//       throw new Error("Usuário não encontrado!");
-//     }
+const deleteUserData = async (userId) => {
+  try {
+    const booksQuery = query(collection(db, "books"), where("userId", "==", userId));
+    const booksSnapshot = await getDocs(booksQuery);
 
-//     const profilePictureUrl = userDoc.data().profilePictureUrl;
-//     if (profilePictureUrl) {
-//       const decodeUrl = decodeURIComponent(profilePictureUrl);
-//       const filePath = decodeUrl.split("/o/")[1].split("?")[0];
-//       const storageRef = ref(storage, filePath);
-//       try {
-//         await deleteObject(storageRef);
-//       } catch (error) {
-//         console.log("Erro ao excluir foto do perfil: ", error);
-//       }
-//     }
+    for (const bookDoc of booksSnapshot.docs) {
+      const bookData = bookDoc.data();
 
-//     await deleteDoc(userDocRef);
+      if (bookData.imageUrl) {
+        const imageRef = ref(storage, `books/${userId}/${bookData.imageUrl}`); // Inclui o userId no caminho
+        try {
+          await deleteObject(imageRef);
+        } catch (err) {
+          console.error(`Erro ao excluir imagem: ${bookData.imageUrl}`, err);
+        }
+      }
 
-//     const response = await fetch(
-//       `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${process.env.FIREBASE_API_KEY}`,
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           idToken: idToken,
-//         }),
-//       }
-//     );
+      if (bookData.bookUrl) {
+        const bookFileRef = ref(storage, `books/${userId}/${bookData.bookUrl}`); // Inclui o userId no caminho
+        try {
+          await deleteObject(bookFileRef);
+        } catch (err) {
+          console.error(`Erro ao excluir arquivo de livro: ${bookData.bookUrl}`, err);
+        }
+      }
 
-//     if (!response.ok) {
-//       throw new Error("Erro ao deletar o usuário: " + response.statusText);
-//     }
+      const evaluationsQuery = query(
+        collection(db, "evaluations"),
+        where("bookId", "==", bookDoc.id)
+      );
+      const evaluationsSnapshot = await getDocs(evaluationsQuery);
+      for (const evalDoc of evaluationsSnapshot.docs) {
+        await deleteDoc(evalDoc.ref);
+      }
 
-//     return response.json();
-//   } catch (error) {
-//     throw new Error(`Erro ao excluir o usuário: ${error.message}`);
-//   }
-// };
+      await deleteDoc(bookDoc.ref);
+    }
+
+    const goalsQuery = query(collection(db, "goals"), where("userId", "==", userId));
+    const goalsSnapshot = await getDocs(goalsQuery);
+    for (const goalDoc of goalsSnapshot.docs) {
+      await deleteDoc(goalDoc.ref);
+    }
+
+    const evaluationsQuery = query(collection(db, "evaluations"), where("userId", "==", userId));
+    const evaluationsSnapshot = await getDocs(evaluationsQuery);
+    for (const evalDoc of evaluationsSnapshot.docs) {
+      await deleteDoc(evalDoc.ref);
+    }
+
+    const userDocRef = doc(db, "users", userId);
+    await deleteDoc(userDocRef);
+
+  } catch (error) {
+    throw new Error("Erro ao deletar dados do usuário: " + error.message);
+  }
+};
 
 module.exports = {
   updateProfilePicture,
@@ -191,6 +199,6 @@ module.exports = {
   loginUser,
   logoutUser,
   updateUser,
- // deleteUser,
+  deleteUserData
 };
 

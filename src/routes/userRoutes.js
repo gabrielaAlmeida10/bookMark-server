@@ -7,8 +7,10 @@ const {
   logout,
   updateProfilePictureController,
   editUserController,
-  //deleteUserController,
+  deleteUserAccount
 } = require("../controllers/userController");
+
+const authMiddleware = require('../middleware/authMiddleware');
 
 
 const router = express.Router();
@@ -34,7 +36,7 @@ router.put(
 
 router.put("/:userId", upload.single("profileImage"), editUserController);
 
-// router.delete("/:id", deleteUserController);
+router.delete("/deleteAccount", authMiddleware, deleteUserAccount);
 
 
 module.exports = router;

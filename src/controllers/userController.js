@@ -6,7 +6,7 @@ const {
   logoutUser,
   updateProfilePicture,
   updateUser,
- // deleteUser,
+ deleteUserData
 } = require("../models/userModel");
 
 const registerUser = async (req, res) => {
@@ -54,14 +54,9 @@ const logout = async (req, res) => {
 
 const updateProfilePictureController = async (req, res) => {
   try {
-    console.log("req.params:", req.params);
     const userId = req.params.userId;
 
     const profileImage = req.file;
-
-    console.log("User ID:", userId); // Agora deve mostrar o ID correto
-    console.log("Profile Image:", profileImage); // Verifica o recebimento correto do arquivo
-
 
     if (!userId) {
       return res.status(400).json({ error: "User ID está indefinido." });
@@ -88,8 +83,6 @@ const editUserController = async (req, res) => {
     const userId = req.params.userId;
     const { name, email } = req.body;
     const profileImage = req.file;
-
-    console.log("User ID:", userId);
 
     const userData = {};
 
@@ -119,26 +112,36 @@ const editUserController = async (req, res) => {
 };
 
 
-// const deleteUserController = async (req, res) => {
-//   try {
-//     console.log('Cabeçalhos recebidos:', req.headers); // Verifique os cabeçalhos recebidos
+const deleteUserAccount = async (req, res) => {
+  const userId = req.userId;
 
-//       const authHeader = req.headers.authorization; // obtém o cabeçalho de autorização
+  try {
+    await deleteUserData(userId);
 
-//       if (!authHeader) {
-//           return res.status(401).json({ error: 'Token de autenticação não fornecido' });
-//       }
+    const idToken = req.headers.authorization.split(" ")[1]; 
+    const apiKey = process.env.FIREBASE_API_KEY;
 
-//       const idToken = authHeader.split(' ')[1]; // obtém o token após "Bearer"
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idToken }),
+      }
+    );
 
-//       // Chame a função para deletar o usuário
-//       await deleteUser(idToken);
-//       res.status(200).json({ message: 'Usuário deletado com sucesso' });
-//   } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ error: error.message });
-//   }
-// };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Erro ao deletar usuário no Authentication: ${errorData.error.message}`);
+    }
+
+    res.status(200).json({ message: "Conta e dados excluídos com sucesso!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 module.exports = {
   registerUser,
@@ -146,6 +149,6 @@ module.exports = {
   logout,
   updateProfilePictureController,
   editUserController,
-  //deleteUserController,
+  deleteUserAccount,
 };
 
