@@ -14,7 +14,7 @@ const createGoalController = async (req, res) => {
     }
 
     const newGoal = await createGoal({ name, totalBooks, startDate, userId });
-    res.status(201).json(newGoal);
+    res.status(201).json({message: "Meta criada com sucesso!", newGoal});
   } catch (error) {
     console.error("Erro ao criar a meta:", error.message);
     res.status(500).json({ message: "Erro ao criar a meta: " + error.message });

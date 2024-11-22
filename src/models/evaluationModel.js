@@ -8,7 +8,7 @@ const {
 } = require("firebase/firestore");
 const { db } = require("../firebase");
 
-const createEvaluation = async ({ userId, bookId, rating, comments = "" }) => { 
+const createEvaluation = async ({ userId, bookId, rating, comments = "" }) => {
   try {
     const evaluationData = {
       userId,
@@ -18,11 +18,12 @@ const createEvaluation = async ({ userId, bookId, rating, comments = "" }) => {
       createdAt: new Date(),
     };
     const evaluationRef = await addDoc(collection(db, "evaluations"), evaluationData);
-    return { id: evaluationRef.id, ...evaluationData };
+    return { message: "Avaliação criada com sucesso!", evaluation: { id: evaluationRef.id, ...evaluationData } };
   } catch (error) {
     throw new Error("Erro ao criar avaliação: " + error.message);
   }
 };
+
 
 
 const updateEvaluation = async (evaluationId, userId, updates) => {
