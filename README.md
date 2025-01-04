@@ -25,13 +25,13 @@ Um servidor em Node.js usando Express e Firebase para gerenciamento de livros e 
 
 ## Configuração do Ambiente
 
-1. Crie um arquivo `.env` com as variáveis do Firebase: 
-   `FIREBASE_API_KEY`;
-   `FIREBASE_AUTH_DOMAIN`;
-   `FIREBASE_PROJECT_ID`;
-   `FIREBASE_STORAGE_BUCKET`;
-   `FIREBASE_MESSAGING_SENDER_ID`;
-   `FIREBASE_APP_ID`. 
+1. Crie um arquivo `.env` com as variáveis do Firebase:
+ -  `FIREBASE_API_KEY`;
+ -  `FIREBASE_AUTH_DOMAIN`;
+ -  `FIREBASE_PROJECT_ID`;
+ -  `FIREBASE_STORAGE_BUCKET`;
+ -  `FIREBASE_MESSAGING_SENDER_ID`;
+ -  `FIREBASE_APP_ID`. 
 As informações podem ser obtidas no console do Firebase.
 
 ## Executando o Projeto
